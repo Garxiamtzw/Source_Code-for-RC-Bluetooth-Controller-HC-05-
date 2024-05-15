@@ -1,175 +1,122 @@
-#define light_FR  14    //LED Front Right
-#define light_FL  15    //LED Front Left
-#define light_BR  16    //LED Back Right
-#define light_BL  17    //LED Back Left
-#define horn_Buzz 18    //Horn Buzzer   
+#include <SoftwareSerial.h>
+#include <Servo.h>
 
-int command;
+// CONEXIONES PARA EL BLUETOOTH.
 
-bool moveForward = false;
-bool moveBackward = false;
-bool turnLeft = false;
-bool turnRight = false;
-bool lightFront = false;
-bool lightBack = false;
-bool horn = false;
+int bluetoothTx = 2;
+int bluetoothRx = 3;
 
-void setup() {
-  pinMode(light_FR, OUTPUT);
-  pinMode(light_FL, OUTPUT);
-  pinMode(light_BR, OUTPUT);
-  pinMode(light_BL, OUTPUT);
-  pinMode(horn_Buzz, OUTPUT);
+SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
-  Serial.begin(9600);  //Set the baud rate to your Bluetooth module.
+// MOTOR 1.
+
+int Motor1A = 5;
+int Motor1B = 6;
+
+// MOTOR 2.
+
+int Motor2A = 9;
+int Motor2B = 10;
+
+void setup ()
+{
+bluetooth.begin(115200);
+bluetooth.print("$$$");
+delay(100);
+bluetooth.println("U,9600,N");
+bluetooth.begin(9600);
+
+pinMode( Motor1A, OUTPUT );
+pinMode( Motor2A, OUTPUT );
+pinMode( Motor1B, OUTPUT );
+pinMode( Motor2B, OUTPUT );
+
+digitalWrite( Motor1A, LOW );
+digitalWrite( Motor2A, LOW );
+digitalWrite( Motor1B, LOW );
+digitalWrite( Motor2B, LOW );
 }
 
-/*
-
-  Just write forward(), back(), left(), right() and stop() function and you are good to go.
-
-*/
-
-
-void forward() {
-
-}
-
-void back() {
-
-}
-
-void left() {
-
-}
-
-void right() {
-
-}
-
-void Stop() {
-
-}
+int flag1 = -1;
+int flag2 = -1;
 
 void loop()
 {
-  if (moveForward)
-  {
-    forward();
-  }
-  else
-  {
-    Stop();
-  }
+if(bluetooth.available())
+{
+char toSend = (char)bluetooth.read();
+if(toSend == 'S')
+{
+  
+flag1 = 0;
+flag2 = 0;
 
-  if (moveBackward)
-  {
-    back();
-  }
-  else
-  {
-    Stop();
-  }
+digitalWrite( Motor1A, LOW);
+analogWrite( Motor1B, LOW);
 
-  if (turnLeft)
-  {
-    left();
-  }
-  else
-  {
-    Stop();
-  }
+digitalWrite( Motor2A, LOW),
+analogWrite( Motor2B, LOW);
 
-  if (turnRight)
-  {
-    right();
-  }
-  else
-  {
-    Stop();
-  }
-
-  if (lightFront)
-  {
-    digitalWrite(light_FR, HIGH);
-    digitalWrite(light_FL, HIGH);
-  }
-  else
-  {
-    digitalWrite(light_FR, LOW);
-    digitalWrite(light_FL, LOW);
-  }
-
-  if (lightBack)
-  {
-    digitalWrite(light_BR, HIGH);
-    digitalWrite(light_BL, HIGH);
-  }
-  else
-  {
-    digitalWrite(light_BR, LOW);
-    digitalWrite(light_BL, LOW);
-  }
-
-  if (horn)
-  {
-    digitalWrite(horn_Buzz, HIGH);
-  }
-  else
-  {
-    digitalWrite(horn_Buzz, LOW);
-  }
-
-  if (Serial.available() > 0) {
-
-    command = (char)Serial.read();
-    Serial.println(command);
-
-    switch (command) {
-      case 'F':
-        moveForward = true;
-        break;
-      case 'f':
-        moveForward = false;
-        break;
-      case 'B':
-        moveBackward = true;
-        break;
-      case 'b':
-        moveBackward = false;
-        break;
-      case 'L':
-        turnLeft = true;
-        break;
-      case 'l':
-        turnLeft = false;
-        break;
-      case 'R':
-        turnRight = true;
-        break;
-      case 'r':
-        turnRight = false;
-        break;
-      case 'U':
-        lightFront = true;
-        break;
-      case 'u':
-        lightFront = false;
-        break;
-      case 'V':
-        lightBack = true;
-        break;
-      case 'v':
-        lightBack = false;
-        break;
-      case 'W':
-        horn = true;
-        break;
-      case 'w':
-        horn = false;
-        break;
-
-      default: Stop();
-    }
-  }
+}
+if( toSend == 'F' || toSend == 'G' || toSend == 'I')
+{
+if (flag1 != 1)
+{
+// ESTOS HARAN QUE VAYA PARA ADELANTE EL CARRITO.
+flag1 = 1;
+digitalWrite( Motor1A, HIGH);
+analogWrite( Motor1B, 0 );
+digitalWrite( Motor2A, HIGH);
+analogWrite( Motor2B, 0 );
+}
+}
+if(toSend == 'B' || toSend == 'H' || toSend == 'J')
+{
+if(flag1 != 2)
+{
+// ESTOS HARAN LA REVERSA DEL CARRITO.
+flag1 = 2;
+digitalWrite( Motor1B, HIGH);
+analogWrite( Motor1A, 0 );
+digitalWrite( Motor2B, HIGH);
+analogWrite( Motor2A, 0 );
+}
+}
+if(toSend == 'L' || toSend == 'G' || toSend == 'H')
+{
+if(flag2 != 1)
+{
+// ESTOS HARAN QUE GIRE HACIA LA IZQUIERDA.
+flag2 = 1;
+digitalWrite( Motor2B, HIGH);
+analogWrite( Motor2A, 0 );
+digitalWrite( Motor1A, HIGH);
+analogWrite( Motor1B, 0 );
+}
+}
+else
+if(toSend == 'R' || toSend == 'I' || toSend == 'J')
+{
+if(flag2 != 2)
+{
+// ESTOS HARAN QUE GIRE HACIA LA DERECHA.
+flag2 = 2;
+digitalWrite( Motor1B, HIGH);
+analogWrite( Motor1A, 0 );
+digitalWrite( Motor2A, HIGH);
+analogWrite( Motor2B, 0 );
+}
+}
+else
+{
+if(flag2 != 3) 
+{
+flag2 = 3;
+digitalWrite ( Motor2A, LOW);
+analogWrite ( Motor2B, LOW);  
+digitalWrite ( Motor2B, LOW);
+analogWrite ( Motor2A, LOW);  
+}
+}
+}
 }
